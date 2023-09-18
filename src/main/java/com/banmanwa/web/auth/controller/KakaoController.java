@@ -1,5 +1,7 @@
 package com.banmanwa.web.auth.controller;
 
+import com.banmanwa.web.member.domain.Member;
+import com.banmanwa.web.member.service.MemberService;
 import com.banmanwa.web.secret.SecretKey;
 import org.json.simple.JSONObject;
 import org.springframework.http.HttpEntity;
@@ -30,6 +32,12 @@ public class KakaoController {
     private static final String KAKAO_HOST_URI = "https://kapi.kakao.com";
     private static final String KAKAO_AUTH_URI = "https://kauth.kakao.com";
 
+    private final MemberService memberService;
+
+    public KakaoController(MemberService memberService) {
+        this.memberService = memberService;
+    }
+
     @GetMapping(value = "/oauth")
     public String kakaoConnect() {
         StringBuffer url = new StringBuffer();
@@ -48,12 +56,27 @@ public class KakaoController {
         Map<String, String> tokens = getKakaoAccessToken(code);
 
         // 사용자 정보 가져오기
-        getKakaoUserInfo(tokens.get("access_token"));
+        JSONObject userInfo = getKakaoUserInfo(tokens.get("access_token"));
+
         session.setAttribute("access_token", tokens.get("access_token"));
+
+        // DB 저장
+        long id = (long) userInfo.get("id");
+        System.out.println(id);
+        Map<String, Object> map = (Map<String, Object>) userInfo.get("kakao_account");
+        Map<String, Object> profile = (Map<String, Object>) map.get("profile");
+        String name = (String) profile.get("nickname");
+        Member member = new Member(id, name);
+        if (memberService.find(id).isEmpty()) {
+            memberService.add(member);
+        }
+        Member inputMember = memberService.find(id).get();
+        System.out.println(inputMember.getId() + " , " + inputMember.getName());
+
         return null;
     }
 
-    private void getKakaoUserInfo(String access_token) {
+    private JSONObject getKakaoUserInfo(String access_token) {
         RestTemplate restTemplate = new RestTemplate();
         String reqUrl = "/v2/user/me";
         URI uri = URI.create(KAKAO_HOST_URI + reqUrl);
@@ -65,7 +88,8 @@ public class KakaoController {
         ResponseEntity<JSONObject> apiResponse = restTemplate.postForEntity(uri, restRequest, JSONObject.class);
         JSONObject responseBody = apiResponse.getBody();
 
-        Map<String, Object> map = (Map<String, Object>) responseBody.get("kakao_account");
+//        Map<String, Object> map = (Map<String, Object>) responseBody.get("kakao_account");
+        return responseBody;
     }
 
     public Map<String, String> getKakaoAccessToken(String code) {
@@ -119,6 +143,6 @@ public class KakaoController {
         JSONObject responseBody = apiResponse.getBody();
 
         session.removeAttribute("access_token");
-        Object id = responseBody.get("id");
+        long id = (long) responseBody.get("id");
     }
 }

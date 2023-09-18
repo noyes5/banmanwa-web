@@ -1,8 +1,19 @@
 package com.banmanwa.web.member.domain;
 
+import javax.persistence.Entity;
+import javax.persistence.OneToMany;
 import java.util.List;
 
-public class Member extends Person{
+@Entity
+public class Member extends Person {
 
-    List<Member> friends;
+    @OneToMany
+    private List<Member> friends;
+
+    public Member() {
+    }
+
+    public Member(Long id, String name) {
+        super(id, name);
+    }
 }
