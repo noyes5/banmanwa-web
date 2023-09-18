@@ -19,6 +19,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.net.URI;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -46,6 +47,7 @@ public class KakaoController {
 
         // 사용자 정보 가져오기
         getKakaoUserInfo(tokens.get("access_token"));
+        session.setAttribute("access_token", tokens.get("access_token"));
         return null;
     }
 
@@ -56,12 +58,15 @@ public class KakaoController {
 
         HttpHeaders headers = new HttpHeaders();
         headers.add("Authorization", "Bearer " + access_token);
+
         HttpEntity<MultiValueMap<String, Object>> restRequest = new HttpEntity<>(headers);
         ResponseEntity<JSONObject> apiResponse = restTemplate.postForEntity(uri, restRequest, JSONObject.class);
         JSONObject responseBody = apiResponse.getBody();
+
         Map<String, Object> map = (Map<String, Object>) responseBody.get("kakao_account");
         System.out.println(map);
     }
+
 
     public Map<String, String> getKakaoAccessToken(String code) {
         String accessToken = "";
@@ -91,5 +96,31 @@ public class KakaoController {
         tokens.put("refresh_token", refreshToken);
 
         return tokens;
+    }
+
+    @GetMapping(value = "/logout")
+    public void kakaoLogout(HttpSession session) {
+        final Enumeration<String> attributeNames = session.getAttributeNames();
+
+        while (attributeNames.hasMoreElements()) {
+            System.out.println(attributeNames.nextElement());
+        }
+
+        String accessToken = (String) session.getAttribute("access_token");
+        System.out.println("accessToken : " + accessToken);
+
+        RestTemplate restTemplate = new RestTemplate();
+        String reqUrl = "/v1/user/logout";
+        URI uri = URI.create("https://kapi.kakao.com" + reqUrl);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Authorization", "Bearer " + accessToken);
+
+        HttpEntity<MultiValueMap<String, Object>> restRequest = new HttpEntity<>(headers);
+        ResponseEntity<JSONObject> apiResponse = restTemplate.postForEntity(uri, restRequest, JSONObject.class);
+        JSONObject responseBody = apiResponse.getBody();
+        session.removeAttribute("access_token");
+        Object id = responseBody.get("id");
+        System.out.println("user id : " + id);
     }
 }
