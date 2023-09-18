@@ -18,8 +18,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import java.io.IOException;
 import java.net.URI;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,10 +27,13 @@ import java.util.Map;
 @RequestMapping("/kakao")
 public class KakaoController {
 
+    private static final String KAKAO_HOST_URI = "https://kapi.kakao.com";
+    private static final String KAKAO_AUTH_URI = "https://kauth.kakao.com";
+
     @GetMapping(value = "/oauth")
     public String kakaoConnect() {
         StringBuffer url = new StringBuffer();
-        url.append("https://kauth.kakao.com/oauth/authorize?");
+        url.append(KAKAO_AUTH_URI + "/oauth/authorize?");
         url.append("client_id=" + SecretKey.KAKAO_API_KEY);
         url.append("&redirect_uri=http://localhost:8080/kakao/callback");
         url.append("&response_type=code");
@@ -39,11 +42,10 @@ public class KakaoController {
     }
 
     @RequestMapping(value = "/callback", produces="application/json", method = {RequestMethod.GET, RequestMethod.POST})
-    public String kakaoLogin(@RequestParam("code") String code, RedirectAttributes ra, HttpSession session, HttpServletResponse response, Model model) {
+    public String kakaoLogin(@RequestParam("code")String code, RedirectAttributes ra,
+                             HttpSession session, HttpServletResponse response, Model model) throws IOException {
 
-        System.out.println("kakao code :" + code);
         Map<String, String> tokens = getKakaoAccessToken(code);
-        System.out.println(tokens.get("access_token"));
 
         // 사용자 정보 가져오기
         getKakaoUserInfo(tokens.get("access_token"));
@@ -54,7 +56,7 @@ public class KakaoController {
     private void getKakaoUserInfo(String access_token) {
         RestTemplate restTemplate = new RestTemplate();
         String reqUrl = "/v2/user/me";
-        URI uri = URI.create("https://kapi.kakao.com" + reqUrl);
+        URI uri = URI.create(KAKAO_HOST_URI + reqUrl);
 
         HttpHeaders headers = new HttpHeaders();
         headers.add("Authorization", "Bearer " + access_token);
@@ -64,16 +66,14 @@ public class KakaoController {
         JSONObject responseBody = apiResponse.getBody();
 
         Map<String, Object> map = (Map<String, Object>) responseBody.get("kakao_account");
-        System.out.println(map);
     }
-
 
     public Map<String, String> getKakaoAccessToken(String code) {
         String accessToken = "";
 
         RestTemplate restTemplate = new RestTemplate();
         String reqUrl = "/oauth/token";
-        URI uri = URI.create("https://kauth.kakao.com" + reqUrl);
+        URI uri = URI.create(KAKAO_AUTH_URI + reqUrl);
 
         HttpHeaders headers = new HttpHeaders();
 
@@ -95,23 +95,21 @@ public class KakaoController {
         tokens.put("access_token", accessToken);
         tokens.put("refresh_token", refreshToken);
 
+/*        RestTemplate template = new RestTemplateBuilder()
+            .defaultHeader("Authorization", "Bearer " + accessToken)
+            .build();
+        template.postForEntity(uri, restRequest, JSONObject.class);*/
+
         return tokens;
     }
 
     @GetMapping(value = "/logout")
     public void kakaoLogout(HttpSession session) {
-        final Enumeration<String> attributeNames = session.getAttributeNames();
-
-        while (attributeNames.hasMoreElements()) {
-            System.out.println(attributeNames.nextElement());
-        }
-
         String accessToken = (String) session.getAttribute("access_token");
-        System.out.println("accessToken : " + accessToken);
 
         RestTemplate restTemplate = new RestTemplate();
         String reqUrl = "/v1/user/logout";
-        URI uri = URI.create("https://kapi.kakao.com" + reqUrl);
+        URI uri = URI.create(KAKAO_HOST_URI + reqUrl);
 
         HttpHeaders headers = new HttpHeaders();
         headers.add("Authorization", "Bearer " + accessToken);
@@ -119,8 +117,8 @@ public class KakaoController {
         HttpEntity<MultiValueMap<String, Object>> restRequest = new HttpEntity<>(headers);
         ResponseEntity<JSONObject> apiResponse = restTemplate.postForEntity(uri, restRequest, JSONObject.class);
         JSONObject responseBody = apiResponse.getBody();
+
         session.removeAttribute("access_token");
         Object id = responseBody.get("id");
-        System.out.println("user id : " + id);
     }
 }
