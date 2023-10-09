@@ -1,6 +1,6 @@
 package com.banmanwa.web.group.domain;
 
-import com.banmanwa.web.location.domain.Location;
+import com.banmanwa.web.location.dto.Location;
 
 import java.util.Date;
 
