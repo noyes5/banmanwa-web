@@ -1,6 +1,7 @@
 package com.banmanwa.web.auth.controller;
 
 import com.banmanwa.web.auth.domain.Kakao;
+import com.banmanwa.web.auth.dto.ProfileDto;
 import com.banmanwa.web.member.domain.Member;
 import com.banmanwa.web.member.service.MemberService;
 import com.banmanwa.web.secret.SecretKey;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.servlet.http.HttpServletResponse;
@@ -51,30 +53,11 @@ public class KakaoController {
     }
 
     @RequestMapping(value = "/callback", produces = "application/json", method = {RequestMethod.GET, RequestMethod.POST})
-    public String kakaoLogin(@RequestParam("code") String code, RedirectAttributes ra,
-                             HttpSession session, HttpServletResponse response, Model model) throws IOException {
-
+    public ResponseEntity<ProfileDto> kakaoLogin(@RequestParam("code") String code, HttpSession session) {
         Map<String, String> tokens = getKakaoAccessToken(code);
-
-        // 사용자 정보 가져오기
-        JSONObject userInfo = getKakaoUserInfo(tokens.get("access_token"));
-
         session.setAttribute("access_token", tokens.get("access_token"));
 
-        // DB 저장
-        long id = (long) userInfo.get("id");
-        System.out.println(id);
-        Map<String, Object> map = (Map<String, Object>) userInfo.get("kakao_account");
-        Map<String, Object> profile = (Map<String, Object>) map.get("profile");
-        String name = (String) profile.get("nickname");
-        Member member = new Member(id, name);
-        if (memberService.find(id).isEmpty()) {
-            memberService.add(member);
-        }
-        Member inputMember = memberService.find(id).get();
-        System.out.println(inputMember.getId() + " , " + inputMember.getName());
-
-        return null;
+        return ResponseEntity.ok().body(Kakao.getKakaoUserInfo(tokens.get("access_token")));
     }
 
     private JSONObject getKakaoUserInfo(String access_token) {
@@ -131,15 +114,16 @@ public class KakaoController {
     @GetMapping(value = "/logout")
     public String kakaoLogout(HttpSession session) {
         String accessToken = (String) session.getAttribute("access_token");
+        WebClient webClient = WebClient.builder()
+                .baseUrl(KAKAO_HOST_URI + "/v1/user/logout")
+                .build();
 
-        RestTemplate restTemplate = new RestTemplate();
-        URI uri = URI.create(KAKAO_HOST_URI + "/v1/user/logout");
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Authorization", "Bearer " + accessToken);
-        Kakao.postRequest(restTemplate, uri, null, headers);
+        webClient.post()
+                .header("Authorization", "Bearer " + accessToken)
+                .retrieve().bodyToMono(String.class).block();
 
         session.removeAttribute("access_token");
+        session.removeAttribute("refresh_token");
         return "redirect:/";
     }
 }
