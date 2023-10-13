@@ -1,9 +1,12 @@
 package com.banmanwa.web.auth.controller;
 
+import com.banmanwa.web.auth.domain.Naver;
+import com.banmanwa.web.auth.dto.ProfileDto;
 import com.banmanwa.web.auth.dto.TokenDto;
 import com.banmanwa.web.secret.SecretKey;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,7 +24,7 @@ public class NaverController {
 
     @GetMapping("/oauth")
     public String naverConnect(HttpSession session) {
-        String state = generateState();
+        String state = Naver.generateState();
         session.setAttribute("oauth_state", state);
 
         StringBuffer url = new StringBuffer();
@@ -34,52 +37,13 @@ public class NaverController {
         return "redirect:" + url.toString();
     }
 
-    public String generateState() {
-        SecureRandom random = new SecureRandom();
-        return new BigInteger(130, random).toString(32);
-    }
-
     @RequestMapping(value = "/callback", method = {RequestMethod.GET, RequestMethod.POST}
             , produces = "application/json")
-    public String naverLogin(@RequestParam(value = "code") String code, @RequestParam(value = "state") String state
+    public ResponseEntity<ProfileDto> naverLogin(@RequestParam(value = "code") String code, @RequestParam(value = "state") String state
             , HttpSession session) {
-        WebClient webClient = WebClient.builder()
-                .baseUrl("https://nid.naver.com")
-                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .build();
+        TokenDto response = Naver.getAccessToken(code, state);
 
-        TokenDto response = webClient.post()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/oauth2.0/token")
-                        .queryParam("client_id", SecretKey.NAVER_API_KEY)
-                        .queryParam("client_secret", SecretKey.NAVER_CLIENT_SECRET)
-                        .queryParam("grant_type", "authorization_code")
-                        .queryParam("state", state)
-                        .queryParam("code", code)
-                        .build())
-                .retrieve().bodyToMono(TokenDto.class).block();
-
-        System.out.println("response.getAccress_token() = " + response.getAccess_token());
-        session.setAttribute("access_token", response.getAccess_token());
-        session.setAttribute("refresh_token", response.getRefresh_token());
-
-        getUserInfo(response.getAccess_token());
-        return null;
-    }
-
-    private void getUserInfo(String accessToken) {
-        WebClient webClient = WebClient.builder()
-                .baseUrl("https://openapi.naver.com")
-                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .build();
-
-        String response = webClient.get()
-                .uri(uriBuilder -> uriBuilder
-                        .path("v1/nid/me")
-                        .build())
-                .header("Authorization", "Bearer " + accessToken)
-                .retrieve().bodyToMono(String.class).block();
-        System.out.println(response);
+        return ResponseEntity.ok().body(Naver.getUserInfo(response.getAccess_token()));
     }
 
     @GetMapping(value = "/logout")
