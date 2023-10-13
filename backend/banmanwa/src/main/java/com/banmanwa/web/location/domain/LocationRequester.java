@@ -13,7 +13,7 @@ import java.util.Objects;
 
 public class LocationRequester {
 
-    private static final String BASIC_URL = "/v2/local/geo/coord2regioncode.json?x=%s&y=%s";
+    private static final String BASIC_URL = "/v2/local/geo/coord2regioncode.json?";
     private final WebClient webClient;
 
     public LocationRequester(WebClient webClient) {
@@ -22,17 +22,25 @@ public class LocationRequester {
 
     public List<Document> requestAddress(double x, double y) {
         try {
-            String url = String.format(BASIC_URL, x, y);
-            LocationResponse locationResponse = webClient.get()
-                    .uri(url)
-                    .accept(MediaType.APPLICATION_JSON)
-                    .retrieve()
-                    .bodyToMono(LocationResponse.class)
-                    .block();
+            LocationResponse locationResponse = getLocationResponse(x, y);
 
             return Objects.requireNonNull(locationResponse).getDocuments();
         } catch (WebClientRequestException e) {
             throw new BanManWaException(LocationExceptionSet.INVALID_LOCATION);
         }
+    }
+
+    private LocationResponse getLocationResponse(double x, double y) {
+        return webClient.get()
+                .uri(uriBuilder -> uriBuilder.path(BASIC_URL)
+                        .queryParam("x", x)
+                        .queryParam("y", y)
+                        .build()
+                )
+                .accept(MediaType.APPLICATION_JSON)
+                .retrieve()
+                .bodyToMono(LocationResponse.class)
+                .block();
+
     }
 }
