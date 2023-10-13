@@ -54,61 +54,10 @@ public class KakaoController {
 
     @RequestMapping(value = "/callback", produces = "application/json", method = {RequestMethod.GET, RequestMethod.POST})
     public ResponseEntity<ProfileDto> kakaoLogin(@RequestParam("code") String code, HttpSession session) {
-        Map<String, String> tokens = getKakaoAccessToken(code);
+        Map<String, String> tokens = Kakao.getKakaoAccessToken(code);
         session.setAttribute("access_token", tokens.get("access_token"));
 
         return ResponseEntity.ok().body(Kakao.getKakaoUserInfo(tokens.get("access_token")));
-    }
-
-    private JSONObject getKakaoUserInfo(String access_token) {
-        RestTemplate restTemplate = new RestTemplate();
-        String reqUrl = "/v2/user/me";
-        URI uri = URI.create(KAKAO_HOST_URI + reqUrl);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Authorization", "Bearer " + access_token);
-
-        HttpEntity<MultiValueMap<String, Object>> restRequest = new HttpEntity<>(headers);
-        ResponseEntity<JSONObject> apiResponse = restTemplate.postForEntity(uri, restRequest, JSONObject.class);
-        JSONObject responseBody = apiResponse.getBody();
-
-//        Map<String, Object> map = (Map<String, Object>) responseBody.get("kakao_account");
-        return responseBody;
-    }
-
-    public Map<String, String> getKakaoAccessToken(String code) {
-        String accessToken = "";
-
-        RestTemplate restTemplate = new RestTemplate();
-        String reqUrl = "/oauth/token";
-        URI uri = URI.create(KAKAO_AUTH_URI + reqUrl);
-
-        HttpHeaders headers = new HttpHeaders();
-
-        MultiValueMap<String, Object> param = new LinkedMultiValueMap<>();
-        param.set("grant_type", "authorization_code");
-        param.set("client_id", SecretKey.KAKAO_API_KEY);
-        param.set("redirect_uri", "http://localhost:8080/kakao/callback");
-        param.set("code", code);
-
-        HttpEntity<MultiValueMap<String, Object>> restRequest = new HttpEntity<>(param, headers);
-        ResponseEntity<JSONObject> apiResponse = restTemplate.postForEntity(uri, restRequest, JSONObject.class);
-        JSONObject responseBody = apiResponse.getBody();
-
-        HashMap<String, String> tokens = new HashMap<>();
-
-        accessToken = (String) responseBody.get("access_token");
-        String refreshToken = (String) responseBody.get("refresh_token");
-
-        tokens.put("access_token", accessToken);
-        tokens.put("refresh_token", refreshToken);
-
-/*        RestTemplate template = new RestTemplateBuilder()
-            .defaultHeader("Authorization", "Bearer " + accessToken)
-            .build();
-        template.postForEntity(uri, restRequest, JSONObject.class);*/
-
-        return tokens;
     }
 
     @GetMapping(value = "/logout")
