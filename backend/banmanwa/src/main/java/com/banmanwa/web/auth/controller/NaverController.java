@@ -25,7 +25,7 @@ public class NaverController {
         session.setAttribute("oauth_state", state);
 
         StringBuffer url = new StringBuffer();
-        url.append("http://nid.naver.com" + "/oauth2.0/authorize?");
+        url.append("https://nid.naver.com" + "/oauth2.0/authorize?");
         url.append("client_id=" + SecretKey.NAVER_API_KEY);
         url.append("&response_type=code");
         url.append("&redirect_uri=http://localhost:8080/api/naver/callback");
@@ -80,5 +80,26 @@ public class NaverController {
                 .header("Authorization", "Bearer " + accessToken)
                 .retrieve().bodyToMono(String.class).block();
         System.out.println(response);
+    }
+
+    @GetMapping(value = "/logout")
+    public String naverLogout(HttpSession session) {
+            String accessToken = (String) session.getAttribute("access_token");
+            WebClient webclient = WebClient.builder()
+                    .baseUrl("https://nid.naver.com")
+                    .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .build();
+
+            webclient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/oauth2.0/token")
+                            .queryParam("client_id", SecretKey.NAVER_API_KEY)
+                            .queryParam("client_secret", SecretKey.NAVER_CLIENT_SECRET)
+                            .queryParam("grant_type", "delete")
+                            .queryParam("access_token", accessToken)
+                            .queryParam("service_provider", "NAVER")
+                            .build())
+                    .retrieve().bodyToMono(String.class).block();
+            return "redirect:/";
     }
 }

@@ -1,5 +1,6 @@
 package com.banmanwa.web.auth.controller;
 
+import com.banmanwa.web.auth.domain.Kakao;
 import com.banmanwa.web.member.domain.Member;
 import com.banmanwa.web.member.service.MemberService;
 import com.banmanwa.web.secret.SecretKey;
@@ -49,8 +50,8 @@ public class KakaoController {
         return "redirect:" + url.toString();
     }
 
-    @RequestMapping(value = "/callback", produces="application/json", method = {RequestMethod.GET, RequestMethod.POST})
-    public String kakaoLogin(@RequestParam("code")String code, RedirectAttributes ra,
+    @RequestMapping(value = "/callback", produces = "application/json", method = {RequestMethod.GET, RequestMethod.POST})
+    public String kakaoLogin(@RequestParam("code") String code, RedirectAttributes ra,
                              HttpSession session, HttpServletResponse response, Model model) throws IOException {
 
         Map<String, String> tokens = getKakaoAccessToken(code);
@@ -128,21 +129,17 @@ public class KakaoController {
     }
 
     @GetMapping(value = "/logout")
-    public void kakaoLogout(HttpSession session) {
+    public String kakaoLogout(HttpSession session) {
         String accessToken = (String) session.getAttribute("access_token");
 
         RestTemplate restTemplate = new RestTemplate();
-        String reqUrl = "/v1/user/logout";
-        URI uri = URI.create(KAKAO_HOST_URI + reqUrl);
+        URI uri = URI.create(KAKAO_HOST_URI + "/v1/user/logout");
 
         HttpHeaders headers = new HttpHeaders();
         headers.add("Authorization", "Bearer " + accessToken);
-
-        HttpEntity<MultiValueMap<String, Object>> restRequest = new HttpEntity<>(headers);
-        ResponseEntity<JSONObject> apiResponse = restTemplate.postForEntity(uri, restRequest, JSONObject.class);
-        JSONObject responseBody = apiResponse.getBody();
+        Kakao.postRequest(restTemplate, uri, null, headers);
 
         session.removeAttribute("access_token");
-        long id = (long) responseBody.get("id");
+        return "redirect:/";
     }
 }
