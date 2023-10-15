@@ -15,6 +15,9 @@ import java.util.Map;
 
 public class Naver {
 
+    public static String NAVER_HOST_URI = "https://openapi.naver.com";
+    public static String NAVER_AUTH_URI = "https://nid.naver.com";
+
     public static String generateState() {
         SecureRandom random = new SecureRandom();
         return new BigInteger(130, random).toString(32);
@@ -22,7 +25,7 @@ public class Naver {
 
     public static TokenDto getAccessToken(String code, String state) {
         WebClient webClient = WebClient.builder()
-                .baseUrl("https://nid.naver.com")
+                .baseUrl(NAVER_AUTH_URI)
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .build();
 
@@ -40,7 +43,7 @@ public class Naver {
 
     public static ProfileDto getUserInfo(String accessToken) {
         WebClient webClient = WebClient.builder()
-                .baseUrl("https://openapi.naver.com")
+                .baseUrl(NAVER_HOST_URI)
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .build();
 
@@ -63,5 +66,4 @@ public class Naver {
 
         return new ProfileDto(id, nickName, profileImage);
     }
-
 }

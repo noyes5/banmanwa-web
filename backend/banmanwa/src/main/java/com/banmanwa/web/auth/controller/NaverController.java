@@ -3,7 +3,9 @@ package com.banmanwa.web.auth.controller;
 import com.banmanwa.web.auth.domain.Naver;
 import com.banmanwa.web.auth.dto.ProfileDto;
 import com.banmanwa.web.auth.dto.TokenDto;
+import com.banmanwa.web.member.service.MemberService;
 import com.banmanwa.web.secret.SecretKey;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -16,17 +18,24 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import javax.servlet.http.HttpSession;
 
+import static com.banmanwa.web.auth.domain.Naver.NAVER_AUTH_URI;
+
 @Controller
 @RequestMapping("/api/naver")
 public class NaverController {
 
+    private final MemberService memberService;
+
+    public NaverController(MemberService memberService) {
+        this.memberService = memberService;
+    }
+
     @GetMapping("/oauth")
-    public String naverConnect(HttpSession session) {
+    public String naverConnect() {
         String state = Naver.generateState();
-        session.setAttribute("oauth_state", state);
 
         StringBuffer url = new StringBuffer();
-        url.append("https://nid.naver.com" + "/oauth2.0/authorize?");
+        url.append(NAVER_AUTH_URI + "/oauth2.0/authorize?");
         url.append("client_id=" + SecretKey.NAVER_API_KEY);
         url.append("&response_type=code");
         url.append("&redirect_uri=http://localhost:8080/api/naver/callback");
@@ -41,14 +50,18 @@ public class NaverController {
             , @RequestParam(value = "state") String state, HttpSession session) {
         TokenDto response = Naver.getAccessToken(code, state);
 
-        return ResponseEntity.ok().body(Naver.getUserInfo(response.getAccess_token()));
+        session.setAttribute("access_token", response.getAccess_token());
+        ProfileDto profile = Naver.getUserInfo(response.getAccess_token());
+        memberService.add(profile);
+
+        return ResponseEntity.ok().body(profile);
     }
 
     @GetMapping(value = "/logout")
     public String naverLogout(HttpSession session) {
             String accessToken = (String) session.getAttribute("access_token");
             WebClient webclient = WebClient.builder()
-                    .baseUrl("https://nid.naver.com")
+                    .baseUrl(NAVER_AUTH_URI)
                     .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                     .build();
 
