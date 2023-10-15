@@ -12,7 +12,7 @@ import javax.persistence.InheritanceType;
 public class Person {
 
     @Id
-    private Long id;
+    private String id;
     private String name;
 
     private String address;
@@ -20,12 +20,12 @@ public class Person {
     public Person() {
     }
 
-    public Person(Long id, String name) {
+    public Person(String id, String name) {
         this.id = id;
         this.name = name;
     }
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
