@@ -15,8 +15,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import javax.servlet.http.HttpSession;
-import java.math.BigInteger;
-import java.security.SecureRandom;
 
 @Controller
 @RequestMapping("/api/naver")
@@ -39,8 +37,8 @@ public class NaverController {
 
     @RequestMapping(value = "/callback", method = {RequestMethod.GET, RequestMethod.POST}
             , produces = "application/json")
-    public ResponseEntity<ProfileDto> naverLogin(@RequestParam(value = "code") String code, @RequestParam(value = "state") String state
-            , HttpSession session) {
+    public ResponseEntity<ProfileDto> naverLogin(@RequestParam(value = "code") String code
+            , @RequestParam(value = "state") String state, HttpSession session) {
         TokenDto response = Naver.getAccessToken(code, state);
 
         return ResponseEntity.ok().body(Naver.getUserInfo(response.getAccess_token()));

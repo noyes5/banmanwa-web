@@ -1,22 +1,14 @@
 package com.banmanwa.web.auth.domain;
 
-import java.net.URI;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Objects;
 
 import com.banmanwa.web.auth.dto.ProfileDto;
-import com.banmanwa.web.auth.dto.TokenDto;
 import com.banmanwa.web.secret.SecretKey;
 import org.json.simple.JSONObject;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 
 public class Kakao {
