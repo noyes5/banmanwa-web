@@ -2,21 +2,21 @@ package com.banmanwa.web.location.dto;
 
 import java.util.List;
 
-public class LocationResponse {
+public class AxisResponse {
 
     private Meta meta;
-    private List<Document> documents;
+    private List<AxisDocument> documents;
 
-    public LocationResponse() {
+    public AxisResponse() {
     }
 
-    public List<Document> getDocuments() {
+    public List<AxisDocument> getDocuments() {
         return documents;
     }
 
     @Override
     public String toString() {
-        return "LocationResponse{" +
+        return "AxisResponse{" +
                 "meta=" + meta +
                 ", documents=" + documents +
                 '}';

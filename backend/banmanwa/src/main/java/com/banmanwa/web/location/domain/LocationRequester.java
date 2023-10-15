@@ -41,6 +41,5 @@ public class LocationRequester {
                 .retrieve()
                 .bodyToMono(LocationResponse.class)
                 .block();
-
     }
 }

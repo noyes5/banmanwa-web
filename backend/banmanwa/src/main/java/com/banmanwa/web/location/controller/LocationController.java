@@ -1,7 +1,9 @@
 package com.banmanwa.web.location.controller;
 
+import com.banmanwa.web.location.dto.AxisDocument;
 import com.banmanwa.web.location.dto.Document;
 import com.banmanwa.web.location.service.LocationService;
+import org.apache.coyote.Response;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,5 +26,11 @@ public class LocationController {
     public ResponseEntity<List<Document>> findAddress(@RequestParam double x, @RequestParam double y) {
         List<Document> documents = locationService.findAddress(x, y);
         return ResponseEntity.ok(documents);
+    }
+
+    @GetMapping("/coordinate")
+    public ResponseEntity<List<AxisDocument>> findAxis(@RequestParam String address) {
+        List<AxisDocument> axisDocuments = locationService.findAxis(address);
+        return ResponseEntity.ok(axisDocuments);
     }
 }
