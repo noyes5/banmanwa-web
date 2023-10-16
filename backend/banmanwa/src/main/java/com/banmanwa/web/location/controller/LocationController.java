@@ -2,11 +2,15 @@ package com.banmanwa.web.location.controller;
 
 import com.banmanwa.web.location.dto.AxisDocument;
 import com.banmanwa.web.location.dto.Document;
+import com.banmanwa.web.location.dto.LocationsRequest;
+import com.banmanwa.web.location.dto.MiddlePointResponse;
 import com.banmanwa.web.location.dto.UtilityDocument;
 import com.banmanwa.web.location.service.LocationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -46,5 +50,11 @@ public class LocationController {
             , @RequestParam double y) {
         List<UtilityDocument> documents = locationService.findUtility(category, x, y);
         return ResponseEntity.ok(documents);
+    }
+
+    @PostMapping("/middlePoint")
+    public ResponseEntity<MiddlePointResponse> findMiddlePoint(@RequestBody LocationsRequest locationsRequest) {
+        MiddlePointResponse middlePointResponse = locationService.findMiddlePoint(locationsRequest);
+        return ResponseEntity.ok(middlePointResponse);
     }
 }
