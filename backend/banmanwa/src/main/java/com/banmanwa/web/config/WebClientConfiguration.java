@@ -19,12 +19,12 @@ public class WebClientConfiguration {
         newMapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
 
         ExchangeStrategies exchangeStrategies = ExchangeStrategies.builder()
-                .codecs(configurer -> configurer.defaultCodecs()
-                        .jackson2JsonDecoder(new Jackson2JsonDecoder(newMapper)))
+                .codecs(configurer ->
+                    configurer.defaultCodecs().jackson2JsonDecoder(new Jackson2JsonDecoder(newMapper)))
                 .build();
 
         return WebClient.builder()
-                .baseUrl("https://dapi.kakako.com")
+                .baseUrl("https://dapi.kakao.com")
                 .exchangeStrategies(exchangeStrategies)
                 .defaultHeader("Authorization", "KakaoAK " + SecretKey.KAKAO_API_KEY)
                 .build();

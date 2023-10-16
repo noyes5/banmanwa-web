@@ -19,7 +19,7 @@ import static com.banmanwa.web.auth.domain.Kakao.KAKAO_AUTH_URI;
 import static com.banmanwa.web.auth.domain.Kakao.KAKAO_HOST_URI;
 
 @Controller
-@RequestMapping("/kakao")
+@RequestMapping("/api/kakao")
 public class KakaoController {
 
     private final MemberService memberService;
@@ -33,7 +33,7 @@ public class KakaoController {
         StringBuffer url = new StringBuffer();
         url.append(KAKAO_AUTH_URI + "/oauth/authorize?");
         url.append("client_id=" + SecretKey.KAKAO_API_KEY);
-        url.append("&redirect_uri=http://localhost:8080/kakao/callback");
+        url.append("&redirect_uri=http://localhost:8080/api/kakao/callback");
         url.append("&response_type=code");
 
         return "redirect:" + url.toString();

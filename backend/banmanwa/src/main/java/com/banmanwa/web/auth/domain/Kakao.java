@@ -36,7 +36,7 @@ public class Kakao {
     private static ProfileDto convertToProfileDto(JSONObject response) {
         String id = String.valueOf(response.get("id"));
         Map<String, Object> kakaoAccount = (LinkedHashMap<String, Object>) response.get("kakao_account");
-        Map<String, Object> profile = (LinkedHashMap<String, Object>) response.get("profile");
+        Map<String, Object> profile = (LinkedHashMap<String, Object>) kakaoAccount.get("profile");
         String nickName = (String) profile.get("nickname");
         String profileImage = (String) profile.get("thumbnail_image_url");
 
@@ -54,7 +54,7 @@ public class Kakao {
                         .path("/oauth/token")
                         .queryParam("grant_type", "authorization_code")
                         .queryParam("client_id", SecretKey.KAKAO_API_KEY)
-                        .queryParam("redirect_uri", "http://localhost:8080/kakao/callback")
+                        .queryParam("redirect_uri", "http://localhost:8080/api/kakao/callback")
                         .queryParam("code", code)
                         .build())
                 .retrieve().bodyToMono(JSONObject.class).block();
