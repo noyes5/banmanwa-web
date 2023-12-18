@@ -12,6 +12,6 @@ public class ControllerAdvice {
     @ExceptionHandler(BanManWaException.class)
     public ResponseEntity<ErrorResponse> handleBanManWaException(BanManWaException e) {
         return ResponseEntity.status(e.getStatus())
-                .body(new ErrorResponse(e.getMessage()));
+            .body(new ErrorResponse(e.getMessage()));
     }
 }
