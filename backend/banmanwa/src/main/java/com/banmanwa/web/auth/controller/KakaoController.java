@@ -1,16 +1,11 @@
 package com.banmanwa.web.auth.controller;
 
-import static com.banmanwa.web.auth.domain.Kakao.KAKAO_AUTH_URI;
-import static com.banmanwa.web.auth.domain.Kakao.KAKAO_HOST_URI;
-
 import com.banmanwa.web.auth.domain.Kakao;
 import com.banmanwa.web.auth.dto.ProfileDto;
 import com.banmanwa.web.auth.dto.ProfileTokenDto;
 import com.banmanwa.web.auth.service.AuthService;
 import com.banmanwa.web.member.service.MemberService;
 import com.banmanwa.web.secret.SecretKey;
-import java.util.Map;
-import javax.servlet.http.HttpSession;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,6 +13,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.reactive.function.client.WebClient;
+
+import javax.servlet.http.HttpSession;
+
+import static com.banmanwa.web.auth.domain.Kakao.KAKAO_AUTH_URI;
+import static com.banmanwa.web.auth.domain.Kakao.KAKAO_HOST_URI;
 
 @Controller
 @RequestMapping("/api/kakao")
@@ -44,7 +44,7 @@ public class KakaoController {
 
     @RequestMapping(value = "/callback", produces = "application/json", method = {RequestMethod.GET,
             RequestMethod.POST})
-    public ResponseEntity<ProfileTokenDto> kakaoLogin(@RequestParam("code") String code, HttpSession session) {
+    public ResponseEntity<ProfileTokenDto> kakaoLogin(@RequestParam("code") String code) {
         String accessToken = Kakao.getKakaoAccessToken(code);
         ProfileDto profile = Kakao.getKakaoUserInfo(accessToken);
         memberService.add(profile);
