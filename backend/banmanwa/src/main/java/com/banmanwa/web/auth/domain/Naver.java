@@ -38,7 +38,8 @@ public class Naver {
                         .queryParam("state", state)
                         .queryParam("code", code)
                         .build())
-                .retrieve().bodyToMono(TokenDto.class).block();
+                .retrieve()
+                .bodyToMono(TokenDto.class).block();
     }
 
     public static ProfileDto getUserInfo(String accessToken) {
@@ -49,8 +50,7 @@ public class Naver {
 
         JSONObject response = webClient.get()
                 .uri(uriBuilder -> uriBuilder
-                        .path("v1/nid/me")
-                        .build())
+                        .path("v1/nid/me").build())
                 .header("Authorization", "Bearer " + accessToken)
                 .retrieve()
                 .bodyToMono(JSONObject.class).block();
